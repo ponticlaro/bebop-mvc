@@ -1,0 +1,40 @@
+{
+    "name": "ponticlaro/bebop-mvc",
+    "description": "Bebop MVC library",
+    "keywords": ["wordpress", "mvc", "model", "controller", "view", "templating"],
+    "type": "library",
+    "license": [
+       "MIT",
+       "GPL-3.0+"
+    ],
+    "authors": [
+        {
+            "name": "Ponticlaro",
+            "email": "hello@ponticlaro.com",
+            "homepage": "http://www.ponticlaro.com",
+            "role": "Developer"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url":  "https://github.com/cristianobaptista/bebop-common"
+        },
+        {
+            "type": "vcs",
+            "url":  "https://github.com/cristianobaptista/bebop-db"
+        }
+    ],
+    "require": {
+        "ponticlaro/bebop-common": "dev-master",
+        "ponticlaro/bebop-db": "dev-master"
+    },
+    "autoload": {
+        "psr-0": {
+            "Ponticlaro": "src/"
+        }
+    },
+    "support": {
+        "email": "hello@ponticlaro.com"
+    }
+}
