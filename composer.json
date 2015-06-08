@@ -15,16 +15,6 @@
             "role": "Developer"
         }
     ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url":  "https://github.com/cristianobaptista/bebop-common"
-        },
-        {
-            "type": "vcs",
-            "url":  "https://github.com/cristianobaptista/bebop-db"
-        }
-    ],
     "require": {
         "ponticlaro/bebop-common": "dev-master",
         "ponticlaro/bebop-db": "dev-master"
