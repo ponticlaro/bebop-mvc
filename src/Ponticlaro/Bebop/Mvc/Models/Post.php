@@ -43,6 +43,13 @@ class Post {
     protected $query;
 
     /**
+     * Function to be executed on instantiation
+     * 
+     * @var string
+     */
+    protected $init_mods;
+
+    /**
      * Instantiates new model by inheriting all the $post properties
      * 
      * @param WP_Post $post
