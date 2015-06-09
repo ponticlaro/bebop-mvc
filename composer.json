@@ -20,8 +20,8 @@
         "ponticlaro/bebop-db": "dev-master"
     },
     "autoload": {
-        "psr-0": {
-            "Ponticlaro": "src/"
+        "psr-4": {
+            "Ponticlaro\\Bebop\\Mvc\\": "src/"
         }
     },
     "support": {
