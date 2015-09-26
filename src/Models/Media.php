@@ -25,6 +25,18 @@ class Media extends Post {
     public $sizes = [];
 
     /**
+     * Get URL for original image
+     * 
+     * @return string URL for original image
+     */
+    public function getUrl()
+    {
+        $image_data = wp_get_attachment_image_src($this->ID, 'full');
+
+        return $image_data ? $image_data[0] : null;
+    }
+
+    /**
      * Checks is a thumbnail with the target size id exists
      * 
      * @param  string  $size           Target size id
