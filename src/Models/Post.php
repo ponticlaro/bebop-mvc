@@ -70,11 +70,8 @@ class Post {
             $this->context_mods = (new Collection())->disableDottedNotation();
             $this->loadables    = (new Collection())->disableDottedNotation();
 
-            // Add class to factory if not already there
-            if (!ModelFactory::canManufacture(static::$__type)) {
-
-                ModelFactory::set(static::$__type, get_called_class());
-            }
+            // Add class to factory
+            ModelFactory::set(static::$__type, get_called_class());
         }
 
         // Create data instance
