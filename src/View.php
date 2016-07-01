@@ -14,6 +14,13 @@ class View {
     protected static $views_dir;
 
     /**
+     * Contains overriden views dir, so that we can restore it later
+     * 
+     * @var string
+     */
+    protected static $overriden_views_dir;
+
+    /**
      * The path to the template file for this view
      * 
      * @var string
@@ -37,14 +44,47 @@ class View {
     }
 
     /**
-     * Sets views directory for all views
+     * Sets views directory
      * 
-     * @param [type] $path [description]
+     * @param string $path Views directory absolute path
      */
     public static function setViewsDir($path)
     {
         if (is_string($path) && is_readable($path)) 
             self::$views_dir = rtrim($path, '/');
+    }
+
+    /**
+     * Returns views directory
+     * 
+     */
+    public static function getViewsDir()
+    {
+        return self::$views_dir;
+    }
+
+    /**
+     * Temporarily overrides views directory
+     *
+     * @param string $path Views directory absolute path
+     */
+    public static function overrideViewsDir($path)
+    {
+        if (is_string($path) && is_readable($path)) {
+
+            self::$overriden_views_dir = self::$views_dir;
+            self::$views_dir           = rtrim($path, '/');
+        }
+    }
+
+    /**
+     * Restores views directory
+     *
+     */
+    public static function restoreViewsDir()
+    {
+        self::$views_dir           = self::$overriden_views_dir;
+        self::$overriden_views_dir = null;
     }
 
     /**
