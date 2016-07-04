@@ -19,6 +19,9 @@
         "ponticlaro/bebop-common": "dev-master",
         "ponticlaro/bebop-db": "dev-master"
     },
+    "require-dev": {
+        "apigen/apigen": "^4"
+    },
     "autoload": {
         "psr-4": {
             "Ponticlaro\\Bebop\\Mvc\\": "src/"
@@ -26,5 +29,6 @@
     },
     "support": {
         "email": "hello@ponticlaro.com"
-    }
+    },
+    "minimum-stability": "dev"
 }
