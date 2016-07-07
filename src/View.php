@@ -104,7 +104,8 @@ class View {
      */
     public function setTemplate($template)
     {
-        if(is_string($template)) $this->template = $template;
+        if(is_string($template)) 
+            $this->template = $template;
 
         return $this;
     }
@@ -267,13 +268,14 @@ class View {
      */
     private function __getTemplatePath($template)
     {
-        // Get file path
-        $file_path = self::$views_dir ? self::$views_dir .'/'. $template .'.php' : str_replace('.php', '', $template) .'.php';
+        // Get file path using views directory
+        if (!is_file($template))
+            $template = self::$views_dir .'/'. $template .'.php';
 
         // Throw error if file do not exist
-        if (!is_file($file_path))
-            throw new \Exception("Template '$template' do not exist or is not readable in the following location: $file_path");
+        if (!is_file($template))
+            throw new \Exception("Template '$template' do not exist or is not readable in the following location: $template");
 
-        return $file_path;
+        return $template;
     }
 }
