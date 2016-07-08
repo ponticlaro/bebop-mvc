@@ -50,6 +50,20 @@ class Post {
     protected $init_mods;
 
     /**
+     * List with model context based modifications
+     * 
+     * @var object Ponticlaro\Bebop\Common\Collection;
+     */
+    protected $context_mods;
+
+    /**
+     * List with model loadables
+     * 
+     * @var object Ponticlaro\Bebop\Common\Collection;
+     */
+    protected $loadables;
+
+    /**
      * Instantiates new model by inheriting all the $post properties
      * 
      * @param WP_Post $post
@@ -141,10 +155,35 @@ class Post {
     {
         $class = get_called_class();
 
-        if (!isset(self::$instances[$class]))
+        if (!isset(self::$instances[$class])) {
+
+            // Create configuration instance
             self::$instances[$class] = new static(null, ['config_instance' => true]);
 
+            // Load model configuration
+            $class::loadConfig();
+        }
+
         return self::$instances[$class];
+    }
+
+    /**
+     * Model configuration 
+     * 
+     */
+    protected static function loadConfig()
+    {
+        // Nothing to do here
+    }
+
+    /**
+     * Returns post-type for this model
+     *
+     * @return  string Post-type name
+     */
+    public static function getType()
+    {
+        return static::$__type;
     }
 
     /**
