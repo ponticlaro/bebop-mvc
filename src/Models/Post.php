@@ -4,6 +4,7 @@ namespace Ponticlaro\Bebop\Mvc\Models;
 
 use Ponticlaro\Bebop\Common\Collection;
 use Ponticlaro\Bebop\Common\ContextManager;
+use Ponticlaro\Bebop\Common\FeatureManager;
 use Ponticlaro\Bebop\Db\Query;
 use Ponticlaro\Bebop\Mvc\ModelFactory;
 
@@ -234,9 +235,15 @@ class Post {
             foreach ($ids as $id) {
                 if ($instance->loadables->hasKey($id)) {
 
-                    ContextManager::getInstance()->overrideCurrent('loadable/'. static::$__type .'/'. $id);
+                    $lac_feature = FeatureManager::getInstance()->get('mvc/model/loadables_auto_context');
+
+                    if ($lac_feature && $lac_feature->isEnabled())
+                        ContextManager::getInstance()->overrideCurrent('loadable/'. static::$__type .'/'. $id);
+
                     call_user_func_array($instance->loadables->get($id), array($this));
-                    ContextManager::getInstance()->restoreCurrent();
+
+                    if ($lac_feature && $lac_feature->isEnabled())
+                        ContextManager::getInstance()->restoreCurrent();
                 }
             }
         }
