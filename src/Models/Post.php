@@ -231,11 +231,13 @@ class Post {
         $instance = static::__getInstance();
 
         if (!is_null($instance->loadables)) {
-
             foreach ($ids as $id) {
-                
-                if ($instance->loadables->hasKey($id))        
+                if ($instance->loadables->hasKey($id)) {
+
+                    ContextManager::getInstance()->overrideCurrent('loadable/'. static::$__type .'/'. $id);
                     call_user_func_array($instance->loadables->get($id), array($this));
+                    ContextManager::getInstance()->restoreCurrent();
+                }
             }
         }
 
