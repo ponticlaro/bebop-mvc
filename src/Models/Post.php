@@ -58,11 +58,25 @@ class Post {
     protected $context_mods;
 
     /**
+     * List with model loadables sets
+     * 
+     * @var object Ponticlaro\Bebop\Common\Collection;
+     */
+    protected $loadables_sets;
+
+    /**
      * List with model loadables
      * 
      * @var object Ponticlaro\Bebop\Common\Collection;
      */
     protected $loadables;
+
+    /**
+     * List of already loaded loadables sets and loadables
+     * 
+     * @var array
+     */
+    protected $loaded = [];
 
     /**
      * Instantiates new model by inheriting all the $post properties
@@ -82,8 +96,9 @@ class Post {
         // Create configuration instance
         if ($options['config_instance']) {
 
-            $this->context_mods = (new Collection())->disableDottedNotation();
-            $this->loadables    = (new Collection())->disableDottedNotation();
+            $this->context_mods   = (new Collection())->disableDottedNotation();
+            $this->loadables_sets = (new Collection())->disableDottedNotation();
+            $this->loadables      = (new Collection())->disableDottedNotation();
 
             // Add class to factory
             ModelFactory::set(static::$__type, get_called_class());
@@ -211,47 +226,6 @@ class Post {
     }
 
     /**
-     * Adds a single function to load optional content or apply optional modifications 
-     * 
-     * @param string   $id Loadable ID
-     * @param callable $fn Loadable function
-     */
-    public static function addLoadable($id, $fn)
-    {
-        static::__getInstance()->loadables->set($id, $fn);
-    }
-
-    /**
-     * Executes loadables by loadable ID
-     * 
-     * @param array $ids List of loadables IDs
-     */
-    public function load(array $ids = array())
-    {
-        // Get model configuration instance
-        $instance = static::__getInstance();
-
-        if (!is_null($instance->loadables)) {
-            foreach ($ids as $id) {
-                if ($instance->loadables->hasKey($id)) {
-
-                    $lac_feature = FeatureManager::getInstance()->get('mvc/model/loadables_auto_context');
-
-                    if ($lac_feature && $lac_feature->isEnabled())
-                        ContextManager::getInstance()->overrideCurrent('loadable/'. static::$__type .'/'. $id);
-
-                    call_user_func_array($instance->loadables->get($id), array($this));
-
-                    if ($lac_feature && $lac_feature->isEnabled())
-                        ContextManager::getInstance()->restoreCurrent();
-                }
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * Sets a function to be executed for every single item,
      * right after being fetched from the database
      * 
@@ -266,8 +240,8 @@ class Post {
     /**
      * Adds a function to execute when the target context key is active
      * 
-     * @param string $context_key Target context key
-     * @param string $fn          Function to execute
+     * @param string $context_keys Target context keys
+     * @param string $fn           Function to execute
      */
     public static function onContext($context_keys, $fn)
     {   
@@ -289,6 +263,99 @@ class Post {
                 }
             }
         }
+    }
+
+    /**
+     * Adds a set of functions to load optional content or apply optional modifications 
+     * 
+     * @param string   $id Loadable set ID
+     * @param callable $fn List of loadables to load
+     */
+    public static function addLoadableSet($id, array $loadables)
+    {
+        static::__getInstance()->loadables_sets->set($id, $loadables);
+    }
+
+    /**
+     * Adds a single function to load optional content or apply optional modifications 
+     * 
+     * @param string   $id Loadable ID
+     * @param callable $fn Loadable function
+     */
+    public static function addLoadable($id, $fn)
+    {
+        static::__getInstance()->loadables->set($id, $fn);
+    }
+
+    /**
+     * Executes loadables sets or loadables by ID
+     * 
+     * @param array $ids List of loadables sets IDs or loadables IDs
+     */
+    public function load(array $ids = array())
+    {
+        // Get model configuration instance
+        $instance = static::__getInstance();
+
+        // Handle loadables sets
+        if (!is_null($instance->loadables_sets)) {
+            foreach ($ids as $loadable_set_key => $loadable_set_id) {
+                if ($instance->loadables_sets->hasKey($loadable_set_id) && !in_array($loadable_set_id, $this->loaded)) {
+
+                    // Making sure we do not load a loadable 
+                    // with the same name as this loadable set
+                    unset($ids[$loadable_set_key]);
+
+                    // Loop through all loadables ids on this set
+                    foreach ($instance->loadables_sets->get($loadable_set_id) as $loadable_id) {
+                        
+                        // Add loadable ID, if not already present
+                        if ($loadable_id != $loadable_set_id && !in_array($loadable_id, $ids))
+                            $ids[] = $loadable_id;
+                    }
+
+                    // Mark loadable set as loaded
+                    $this->loaded[] = $loadable_set_id;
+                }
+            }
+        }
+
+        // Handle loadables
+        if (!is_null($instance->loadables)) {
+            foreach ($ids as $id) {
+                if ($instance->loadables->hasKey($id) && !in_array($id, $this->loaded)) {
+
+                    $lac_feature = FeatureManager::getInstance()->get('mvc/model/loadables_auto_context');
+
+                    if ($lac_feature && $lac_feature->isEnabled())
+                        ContextManager::getInstance()->overrideCurrent('loadable/'. static::$__type .'/'. $id);
+
+                    call_user_func_array($instance->loadables->get($id), array($this));
+
+                    if ($lac_feature && $lac_feature->isEnabled())
+                        ContextManager::getInstance()->restoreCurrent();
+
+                    // Mark loadable as loaded
+                    $this->loaded[] = $id;
+                }
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Executes loadables sets and loadables on target contexts
+     * 
+     * @param  string $context_keys  Target context keys
+     * @param  array  $loadables_ids List of loadables sets IDs or loadables IDs
+     * @return void 
+     */
+    public static function loadOnContext($context_keys, array $loadables)
+    {
+        static::onContext($context_keys, function($model) use($loadables) {
+            $model->load($loadables);
+        });
     }
 
     /**
