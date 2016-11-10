@@ -5,7 +5,7 @@ namespace Ponticlaro\Bebop\Mvc\Helpers;
 use Ponticlaro\Bebop\Common\Collection;
 use Ponticlaro\Bebop\Mvc\Model;
 
-class FeatureManager extends \Ponticlaro\Bebop\Common\Patterns\SingletonAbstract {
+class ModelsManager extends \Ponticlaro\Bebop\Common\Patterns\SingletonAbstract {
 
   /**
    * Models collection
@@ -43,7 +43,7 @@ class FeatureManager extends \Ponticlaro\Bebop\Common\Patterns\SingletonAbstract
    */
   public function get($type)
   {
-    if (!$this->exists($type)
+    if (!$this->exists($type))
       $this->add(new Model($type));
 
     return $this->models->get($type);

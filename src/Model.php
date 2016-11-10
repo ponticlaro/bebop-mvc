@@ -53,51 +53,60 @@ class Model {
   protected static $loadables;
 
   /**
-   * List of already loaded loadables sets and loadables
-   * 
-   * @var array
-   */
-  protected $loaded = [];
-
-  /**
    * Current query instance
    * 
    * @var Ponticlaro\Bebop\Db\Query;
    */
-  protected $query;
+  protected static $query;
 
   /**
-   * Initializes data model
+   * List of already loaded loadables sets and loadables
    * 
-   * @param  string $type Data model type
-   * @return void
+   * @var array
    */
-  final public static function init($type)
-  {
-    static::$__type         = $type;
-    static::$context_mods   = (new Collection())->disableDottedNotation();
-    static::$loadables_sets = (new Collection())->disableDottedNotation();
-    static::$loadables      = (new Collection())->disableDottedNotation();
-  }
+  private $__loaded = [];
 
   /**
    * Instantiates new model by inheriting all the $post properties
    * 
    * @param WP_Post $post
    */
-  final public function __construct(\WP_Post $post = null)
-  {    
-    // Collect all $post properties
-    foreach ((array) $post as $key => $value) {
-      $this->{$key} = $value;
+  final public function __construct($post = null)
+  { 
+    // Handle model configuration
+    if (!static::$__init && is_string($post)) {
+      static::__init($post);
     }
 
-    // Add permalink properties to relevant types
-    if (!in_array($post->post_type, array('attachment', 'revision', 'nav_menu')))
+    // Handle model instance
+    elseif ($post instanceof \WP_Post) {
+      
+      // making sure model is configured before continuing
+      if (!static::$__init)
+        static::__init($post->post_type);
+
+      // Collect all $post properties
+      foreach ((array) $post as $key => $value) {
+        $this->{$key} = $value;
+      }
+
+      // Add permalink properties to relevant types
+      if (!in_array($post->post_type, array('attachment', 'revision', 'nav_menu')))
         $this->permalink = get_permalink($this->ID);
 
-    static::__applyInitMods($this);
-    static::__applyContextMods($this);
+      static::__applyInitMods($this);
+      static::__applyContextMods($this);
+    }
+  }
+
+  /**
+   * Creates an instance of the currently called class
+   * 
+   * @return Ponticlaro\Bebop\Mvc\Model
+   */
+  public function applyTo(\WP_Post $post)
+  {
+    return new static($post);
   }
 
   /**
@@ -107,7 +116,7 @@ class Model {
    */
   public static function getType()
   {
-      return static::$type;
+    return static::$__type;
   }
 
   /**
@@ -119,7 +128,7 @@ class Model {
    */
   public function getMeta($key, $single = false)
   {
-      return get_post_meta($this->ID, $key, $single);
+    return get_post_meta($this->ID, $key, $single);
   }
 
   /**
@@ -129,8 +138,10 @@ class Model {
    */
   public static function setType($type)
   {
-      if (is_string($type))
-          static::$__type = $type;
+    if (is_string($type))
+      static::$__type = $type;
+
+    return $this;
   }
 
   /**
@@ -139,10 +150,12 @@ class Model {
    * 
    * @param  callable $fn Function to be executed
    */
-  public static function onInit($fn)
+  public function onInit($fn)
   {
-      if (is_callable($fn))
-          static::__getInstance()->init_mods = $fn;
+    if (is_callable($fn))
+      static::$init_mods = $fn;
+
+    return $this;
   }
 
   /**
@@ -151,26 +164,24 @@ class Model {
    * @param string $context_keys Target context keys
    * @param string $fn           Function to execute
    */
-  public static function onContext($context_keys, $fn)
+  public function onContext($context_keys, $fn)
   {   
-      if (is_callable($fn)) {
+    if (is_callable($fn)) {
 
-          // Get model configuration instance
-          $instance = static::__getInstance();
-
-          if (is_string($context_keys)) {
-             
-              $instance->context_mods->set($context_keys, $fn);
-          }
-
-          elseif (is_array($context_keys)) {
-              
-              foreach ($context_keys as $context_key) {
-                 
-                  $instance->context_mods->set($context_key, $fn);
-              }
-          }
+      if (is_string($context_keys)) {
+         
+        static::$context_mods->set($context_keys, $fn);
       }
+
+      elseif (is_array($context_keys)) {
+        foreach ($context_keys as $context_key) {
+           
+          static::$context_mods->set($context_key, $fn);
+        }
+      }
+    }
+
+    return $this;
   }
 
   /**
@@ -179,9 +190,11 @@ class Model {
    * @param string   $id Loadable set ID
    * @param callable $fn List of loadables to load
    */
-  public static function addLoadableSet($id, array $loadables)
+  public function addLoadableSet($id, array $loadables)
   {
-      static::__getInstance()->loadables_sets->set($id, $loadables);
+    static::$loadables_sets->set($id, $loadables);
+
+    return $this;
   }
 
   /**
@@ -190,9 +203,11 @@ class Model {
    * @param string   $id Loadable ID
    * @param callable $fn Loadable function
    */
-  public static function addLoadable($id, $fn)
+  public function addLoadable($id, $fn)
   {
-      static::__getInstance()->loadables->set($id, $fn);
+    static::$loadables->set($id, $fn);
+
+    return $this;
   }
 
   /**
@@ -202,14 +217,11 @@ class Model {
    */
   public function load(array $ids = array())
   {
-    // Get model configuration instance
-    $instance = static::__getInstance();
-
     // Handle loadables sets
-    if (!is_null(static::$loadables_sets)) {
+    if (static::$loadables_sets) {
 
       foreach ($ids as $loadable_set_key => $loadable_set_id) {
-        if (static::$loadables_sets->hasKey($loadable_set_id) && !in_array($loadable_set_id, $this->loaded)) {
+        if (static::$loadables_sets->hasKey($loadable_set_id) && !in_array($loadable_set_id, $this->__loaded)) {
 
           // Making sure we do not load a loadable 
           // with the same name as this loadable set
@@ -224,21 +236,21 @@ class Model {
           }
 
           // Mark loadable set as loaded
-          $this->loaded[] = $loadable_set_id;
+          $this->__loaded[] = $loadable_set_id;
         }
       }
     }
 
     // Handle loadables
-    if (!is_null(static::$loadables)) {
+    if (static::$loadables) {
 
       foreach ($ids as $id) {
-        if (static::$loadables->hasKey($id) && !in_array($id, $this->loaded)) {
+        if (static::$loadables->hasKey($id) && !in_array($id, $this->__loaded)) {
 
           $lac_feature = FeatureManager::getInstance()->get('mvc/model/loadables_auto_context');
 
           if ($lac_feature && $lac_feature->isEnabled())
-            ContextManager::getInstance()->overrideCurrent('loadable/'. static::$__type .'/'. $id);
+            ContextManager::getInstance()->overrideCurrent('loadable/'. static::$getType() .'/'. $id);
 
           call_user_func_array(static::$loadables->get($id), array($this));
 
@@ -246,7 +258,7 @@ class Model {
             ContextManager::getInstance()->restoreCurrent();
 
           // Mark loadable as loaded
-          $this->loaded[] = $id;
+          $this->__loaded[] = $id;
         }
       }
     }
@@ -261,73 +273,13 @@ class Model {
    * @param  array  $loadables_ids List of loadables sets IDs or loadables IDs
    * @return void 
    */
-  public static function loadOnContext($context_keys, array $loadables)
+  public function loadOnContext($context_keys, array $loadables)
   {
     static::onContext($context_keys, function($model) use($loadables) {
       $model->load($loadables);
     });
-  }
 
-  /**
-   * Apply all post modifications 
-   * 
-   * @param  \WP_Post $post
-   * @return object         Instance of the current class
-   */
-  private static function __applyModelMods(\WP_Post $post)
-  {   
-    return new static($post);
-  }
-
-  /**
-   * Calls the function that applies initialization modifications
-   * 
-   * @param  object $item Object to be modified
-   * @return void
-   */
-  private static function __applyInitMods(&$item, $raw_post)
-  {
-    // Get model configuration instance
-    $instance = static::__getInstance();
-
-    if (!is_null($instance->init_mods))
-      call_user_func_array($instance->init_mods, array($item, $raw_post));
-  }
-
-  /**
-   * 
-   * Executes any function that exists for the current context
-   * 
-   * @param class $item WP_Post instance converted into an instance of the current class
-   */
-  protected function __applyContextMods(&$item, $raw_post)
-  {
-    // Get model configuration instance
-    $instance = static::__getInstance();
-
-    // Get current environment
-    $context     = ContextManager::getInstance();
-    $context_key = $context->getCurrent();
-
-    // Execute current environment function
-    if (!is_null($instance->context_mods)) {
-
-      // Exact match for the current environment
-      if ($instance->context_mods->hasKey($context_key)) {
-          
-        call_user_func_array($instance->context_mods->get($context_key), array($item, $raw_post));
-      } 
-
-      // Check for partial matches
-      else {
-
-        foreach ($instance->context_mods->getAll() as $key => $fn) {
-        
-          if ($context->is($key))
-            call_user_func_array($fn, array($item, $raw_post));
-        }
-      }
-    }
+    return $this;
   }
 
   /**
@@ -337,8 +289,13 @@ class Model {
    * @param  bool  $keep_order True if posts order should match the order of $ids, false otherwise
    * @return mixed             Single object or array of objects
    */
-  public static function find($ids = null, $keep_order = true)
+  public function find($ids = null, array $options = [])
   {
+    // Merge user options with default ones
+    $options = array_merge([
+      'keep_order' => true
+    ], $options);
+
     // Make sure we have a clean query object to be used
     static::__resetQuery();
 
@@ -352,36 +309,33 @@ class Model {
           
         global $post;
 
-        return static::__applyModelMods($post);
+        return new static($post);
       }
     }
 
     else {
 
-      // Get model configuration instance
-      $instance = static::__getInstance();
-
       // Set post type argument
-      $instance->query->postType(static::$__type);
+      static::$query->postType(static::getType());
 
       // Change status to inherit on attachments
-      if (static::$__type == 'attachment')
-        $instance->query->status('inherit');
+      if (static::getType() == 'attachment')
+        static::$query->status('inherit');
 
       // Get results
-      $data = $instance->query->find($ids, $keep_order);
+      $data = static::$query->find($ids, $options['keep_order']);
 
       if ($data) {
           
         if (is_object($data)) {
           
-          $data = static::__applyModelMods($data);
+          $data = new static($data);
         }
 
         elseif (is_array($data)) {
           foreach ($data as $key => $post) {
               
-            $data[$key] = static::__applyModelMods($post);
+            $data[$key] = new static($post);
           }
         }
       }
@@ -395,32 +349,25 @@ class Model {
    * 
    * @return array
    */
-  public static function findAll(array $args = array())
+  public function findAll(array $args = array())
   {   
     // Make sure we have a query object to be used
     static::__enableQueryMode();
 
-    // Get model configuration instance
-    $instance = static::__getInstance();
-
     // Add post type as final argument
-    $instance->query->postType(static::$__type);
+    static::$query->postType(static::getType());
 
     // Change status to inherit on attachments
-    if (static::$__type == 'attachment')
-      $instance->query->status('inherit');
+    if (static::getType() == 'attachment')
+      static::$query->status('inherit');
 
     // Get query results
-    $items = $instance->query->findAll($args);
-
-    // Save query meta data
-    $instance->query_meta = $instance->query->getMeta();
+    $items = static::$query->findAll($args);
 
     // Apply model modifications
     if ($items) {
       foreach ($items as $key => $item) {
-
-        $items[$key] = static::__applyModelMods($item);
+        $items[$key] = new static($item);
       }
     }
 
@@ -434,14 +381,11 @@ class Model {
    */
   public static function query()
   {
-    // Get model configuration instance
-    $instance = static::__getInstance();
-
     // Make sure we have a query object to be used
-    if(is_null($instance->query))
+    if(is_null(static::$query))
       static::__enableQueryMode();
 
-    return $instance->query;
+    return static::$query;
   }
 
   /**
@@ -455,12 +399,9 @@ class Model {
   {
     static::__enableQueryMode();
 
-    // Get model configuration instance
-    $instance = static::__getInstance();
+    call_user_func_array(array(static::$query, $name), $args);
 
-    call_user_func_array(array($instance->query, $name), $args);
-
-    return $instance;
+    return $this;
   }
 
   /**
@@ -472,13 +413,71 @@ class Model {
    */
   public function __call($name, $args)
   {
-    // Get model configuration instance
-    $instance = static::__getInstance();
+    static::__enableQueryMode();
 
-    if (!is_null($instance->query))
-      call_user_func_array(array($instance->query, $name), $args);
+    call_user_func_array(array(static::$query, $name), $args);
 
-    return $instance;
+    return $this;
+  }
+
+  /**
+   * Initializes data model
+   * 
+   * @param  string $type Data model type
+   * @return void
+   */
+  private static function __init($type)
+  {
+    static::$__type         = $type;
+    static::$context_mods   = (new Collection())->disableDottedNotation();
+    static::$loadables_sets = (new Collection())->disableDottedNotation();
+    static::$loadables      = (new Collection())->disableDottedNotation();
+    static::$__init         = true;
+  }
+
+  /**
+   * Calls the function that applies initialization modifications
+   * 
+   * @param  object $item Object to be modified
+   * @return void
+   */
+  private static function __applyInitMods(&$item)
+  {
+    if (!is_null(static::$init_mods))
+      call_user_func_array(static::$init_mods, array($item));
+  }
+
+  /**
+   * 
+   * Executes any function that exists for the current context
+   * 
+   * @param class $item WP_Post instance converted into an instance of the current class
+   */
+  private function __applyContextMods(&$item)
+  {
+    // Get current environment
+    $context     = ContextManager::getInstance();
+    $context_key = $context->getCurrent();
+
+    // Execute current environment function
+    if (!is_null(static::$context_mods)) {
+
+      // Exact match for the current environment
+      if (static::$context_mods->hasKey($context_key)) {
+          
+        call_user_func_array(static::$context_mods->get($context_key), array($item));
+      } 
+
+      // Check for partial matches
+      else {
+
+        foreach (static::$context_mods->getAll() as $key => $fn) {
+        
+          if ($context->is($key))
+            call_user_func_array($fn, array($item));
+        }
+      }
+    }
   }
 
   /**
@@ -488,11 +487,8 @@ class Model {
    */
   private static function __enableQueryMode()
   {
-    // Get model configuration instance
-    $instance = static::__getInstance();
-
-    if (is_null($instance->query) || $instance->query->wasExecuted())
-      $instance->query = new Query;
+    if (is_null(static::$query) || static::$query->wasExecuted())
+      static::__resetQuery();
   }
 
   /**
@@ -502,7 +498,6 @@ class Model {
    */
   private static function __resetQuery()
   {
-    // Get model configuration instance
-    static::__getInstance()->query = new Query;
+    static::$query = new Query;
   }
 }
