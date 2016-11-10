@@ -1,6 +1,6 @@
 <?php
 
-namespace Ponticlaro\Bebop\Mvc;
+namespace Ponticlaro\Bebop\Mvc\Helpers;
 
 class ModelFactory extends \Ponticlaro\Bebop\Common\Patterns\FactoryAbstract {
 
