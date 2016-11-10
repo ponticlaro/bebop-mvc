@@ -7,8 +7,11 @@ use Ponticlaro\Bebop\Common\ContextManager;
 use Ponticlaro\Bebop\Common\FeatureManager;
 use Ponticlaro\Bebop\Db\Query;
 use Ponticlaro\Bebop\Mvc\Helpers\ModelFactory;
+use Ponticlaro\Bebop\Mvc\Traits\Attachment as AttachmentTrait;
 
 class Model {
+
+  use AttachmentTrait;
 
   /**
    * Flag for model initialization
