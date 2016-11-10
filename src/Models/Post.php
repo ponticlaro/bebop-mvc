@@ -6,7 +6,7 @@ use Ponticlaro\Bebop\Common\Collection;
 use Ponticlaro\Bebop\Common\ContextManager;
 use Ponticlaro\Bebop\Common\FeatureManager;
 use Ponticlaro\Bebop\Db\Query;
-use Ponticlaro\Bebop\Mvc\ModelFactory;
+use Ponticlaro\Bebop\Mvc\Helpers\ModelFactory;
 
 class Post {
 
