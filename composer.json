@@ -1,34 +1,36 @@
 {
-    "name": "ponticlaro/bebop-mvc",
-    "description": "Bebop MVC library",
-    "keywords": ["wordpress", "mvc", "model", "controller", "view", "templating"],
-    "type": "library",
-    "license": [
-       "MIT",
-       "GPL-3.0+"
-    ],
-    "authors": [
-        {
-            "name": "Ponticlaro",
-            "email": "hello@ponticlaro.com",
-            "homepage": "http://www.ponticlaro.com",
-            "role": "Developer"
-        }
-    ],
-    "require": {
-        "ponticlaro/bebop-common": "dev-master",
-        "ponticlaro/bebop-db": "dev-master"
-    },
-    "require-dev": {
-        "apigen/apigen": "^4"
-    },
-    "autoload": {
-        "psr-4": {
-            "Ponticlaro\\Bebop\\Mvc\\": "src/"
-        }
-    },
-    "support": {
-        "email": "hello@ponticlaro.com"
-    },
-    "minimum-stability": "dev"
+  "name": "ponticlaro/bebop-mvc",
+  "description": "Bebop MVC library",
+  "keywords": ["wordpress", "mvc", "model", "controller", "view", "templating"],
+  "type": "library",
+  "license": [
+   "MIT",
+   "GPL-3.0+"
+  ],
+  "authors": [
+    {
+      "name": "Ponticlaro",
+      "email": "hello@ponticlaro.com",
+      "homepage": "http://www.ponticlaro.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "ponticlaro/bebop-common": "^1",
+    "ponticlaro/bebop-db": "^1"
+  },
+  "require-dev": {
+    "apigen/apigen": "^4"
+  },
+  "autoload": {
+    "psr-4": {
+      "Ponticlaro\\Bebop\\Mvc\\": "src/"
+    }
+  },
+  "scripts": {
+    "generate-docs": "apigen generate --config ./apigen.yaml"
+  },
+  "support": {
+    "email": "hello@ponticlaro.com"
+  }
 }
