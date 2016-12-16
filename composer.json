@@ -16,7 +16,7 @@
     }
   ],
   "require": {
-    "ponticlaro/bebop-common": "^1",
+    "ponticlaro/bebop-common": "^1.1.1",
     "ponticlaro/bebop-db": "^1"
   },
   "require-dev": {
