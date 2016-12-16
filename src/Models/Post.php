@@ -226,6 +226,31 @@ class Post {
     }
 
     /**
+     * Checks if data model has modifications
+     * 
+     * @return boolean True is it has modifications, false otherwise
+     */
+    public static function hasMods()
+    {
+        $has_mods   = false;
+        $class_name = get_called_class();
+
+        if ($class_name::getInitMods())
+            $has_mods = true;
+
+        if ($class_name::getAllContextMods())
+            $has_mods = true;
+
+        if ($class_name::getAllLoadablesSets())
+            $has_mods = true;
+
+        if ($class_name::getAllLoadables())
+            $has_mods = true;
+
+        return $has_mods;
+    }
+
+    /**
      * Sets a function to be executed for every single item,
      * right after being fetched from the database
      * 
@@ -235,6 +260,16 @@ class Post {
     {
         if (is_callable($fn))
             static::__getInstance()->init_mods = $fn;
+    }
+
+    /**
+     * Returns init modifications
+     * 
+     * @return array Init modifications
+     */
+    public static function getInitMods()
+    {
+        return static::__getInstance()->init_mods;
     }
 
     /**
@@ -266,6 +301,16 @@ class Post {
     }
 
     /**
+     * Returns all context modifications
+     * 
+     * @return array List of context modifications
+     */
+    public static function getAllContextMods()
+    {
+        return static::__getInstance()->context_mods->getAll();
+    }
+
+    /**
      * Adds a set of functions to load optional content or apply optional modifications 
      * 
      * @param string   $id Loadable set ID
@@ -277,6 +322,16 @@ class Post {
     }
 
     /**
+     * Returns all loadable sets
+     * 
+     * @return array List of loadable sets
+     */
+    public static function getAllLoadablesSets()
+    {
+        return static::__getInstance()->loadables_sets->getAll();
+    }
+
+    /**
      * Adds a single function to load optional content or apply optional modifications 
      * 
      * @param string   $id Loadable ID
@@ -285,6 +340,16 @@ class Post {
     public static function addLoadable($id, $fn)
     {
         static::__getInstance()->loadables->set($id, $fn);
+    }
+
+    /**
+     * Returns all loadables
+     * 
+     * @return array List of loadables
+     */
+    public static function getAllLoadables()
+    {
+        return static::__getInstance()->loadables->getAll();
     }
 
     /**
