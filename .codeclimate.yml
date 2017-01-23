@@ -1,0 +1,18 @@
+engines:
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - php
+  fixme:
+    enabled: true
+  phpmd:
+    enabled: true
+    config:
+      file_extensions: "php"
+      rulesets: "cleancode,codesize,controversial,design,naming,unusedcode,.phpmd-rules.xml"
+ratings:
+  paths:
+  - "**.php"
+exclude_paths:
+- tests/
